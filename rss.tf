@@ -43,9 +43,26 @@ resource "aws_lambda_function" "rss" {
   architectures = [ "arm64" ]
 
   source_code_hash = data.archive_file.lambda.output_base64sha256
+
+  lifecycle {
+    ignore_changes = [ source_code_hash ]
+  }
 }
 
 resource "aws_lambda_function_url" "rss_url" {
   function_name      = aws_lambda_function.rss.function_name
   authorization_type = "NONE"
+}
+
+
+resource "aws_dynamodb_table" "rss_cache" {
+  name         = "rss_cache"
+  billing_mode = "PROVISIONED"
+  read_capacity = 1
+  write_capacity = 1
+  hash_key     = "ID"
+  attribute {
+    name = "ID"
+    type = "S"
+  }
 }
