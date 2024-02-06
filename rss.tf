@@ -16,6 +16,7 @@ resource "aws_iam_role" "lambda_role" {
   assume_role_policy = data.aws_iam_policy_document.lambda_role_trust_policy.json
 }
 
+# policy for lambda to send logs to CloudWatch
 data "aws_iam_policy" "lambda_basic_policy" {
   name = "AWSLambdaBasicExecutionRole"
 }
@@ -23,6 +24,33 @@ data "aws_iam_policy" "lambda_basic_policy" {
 resource "aws_iam_role_policy_attachment" "attach_basic_policy" {
   role       = aws_iam_role.lambda_role.name
   policy_arn = data.aws_iam_policy.lambda_basic_policy.arn
+}
+
+# policy for lambda to access dynamodb
+data "aws_iam_policy_document" "rss_lambda_dynamo_policy_doc" {
+  statement {
+    sid = "RssLambdaDynamoPolicy"
+
+    actions = [
+      "dynamodb:GetItem",
+      "dynamodb:PutItem",
+    ]
+
+    resources = [
+      aws_dynamodb_table.rss_cache.arn
+    ]
+  }
+}
+
+resource "aws_iam_policy" "rss_lambda_dynamo_policy" {
+  name   = "rss_lambda_dynamo_policy"
+  path   = "/"
+  policy = data.aws_iam_policy_document.rss_lambda_dynamo_policy_doc.json
+}
+
+resource "aws_iam_role_policy_attachment" "attach_lambda_policy" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.rss_lambda_dynamo_policy.arn
 }
 
 
