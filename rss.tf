@@ -72,6 +72,12 @@ resource "aws_lambda_function" "rss" {
 
   source_code_hash = data.archive_file.lambda.output_base64sha256
 
+  logging_config {
+    log_format = "JSON"
+    application_log_level = "INFO"
+    system_log_level = "INFO"
+  }
+
   lifecycle {
     ignore_changes = [ source_code_hash ]
   }
@@ -93,4 +99,9 @@ resource "aws_dynamodb_table" "rss_cache" {
     name = "ID"
     type = "S"
   }
+}
+
+resource "aws_cloudwatch_log_group" "rss_log_group" {
+  name = "/aws/lambda/${aws_lambda_function.rss.function_name}"
+  retention_in_days = 30
 }
